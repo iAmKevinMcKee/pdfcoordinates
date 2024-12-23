@@ -485,8 +485,9 @@ function pdfViewer() {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
 
-            const pdfX = Math.round(x / 1.5);
-            const pdfY = Math.round(y / 1.5);
+            // Convert screen coordinates to FPDI coordinates (multiplied by 0.3528 to convert pixels to points)
+            const pdfX = Math.round(x * 0.3528);
+            const pdfY = Math.round(y * 0.3528);
 
             this.textPlacements.push({
                 id: Date.now(),
@@ -513,8 +514,6 @@ function pdfViewer() {
                 'Helvetica': 'Arial, sans-serif',
                 'Times-Roman': 'Times New Roman, serif',
                 'Courier': 'Courier New, monospace',
-                'Symbol': 'Symbol',
-                'ZapfDingbats': 'ZapfDingbats'
             }[placement.font] || 'Arial, sans-serif';
 
             const fontWeight = placement.type === 'checkbox' ? 'bold' : 'normal';
@@ -522,12 +521,14 @@ function pdfViewer() {
         },
 
         generateCode(placement) {
+            let pageCode = placement.page > 1 ? `$tplIdx = $pdf->importPage(${placement.page});\n$pdf->AddPage();\n$pdf->useTemplate($tplIdx);\n` : '';
+
             if (placement.type === 'checkbox') {
-                return `// Add X mark for checkbox\n$pdf->setFont('${placement.font}', 'B', ${placement.fontSize});\n$pdf->text(${placement.x}, ${placement.y}, 'X');`;
+                return `${pageCode}$pdf->SetFont('${placement.font}', 'B', ${placement.fontSize});\n$pdf->SetXY(${placement.x}, ${placement.y});\n$pdf->Write(0, 'X');`;
             } else {
-                return `// Add text to PDF\n$pdf->setFont('${placement.font}', '', ${placement.fontSize});\n$pdf->text(${placement.x}, ${placement.y}, "${placement.text}");`;
+                return `${pageCode}$pdf->SetFont('${placement.font}', '', ${placement.fontSize});\n$pdf->SetXY(${placement.x}, ${placement.y});\n$pdf->Write(0, '${placement.text}');`;
             }
-        },
+        }
 
         copyCode(placement) {
             const code = this.generateCode(placement);
