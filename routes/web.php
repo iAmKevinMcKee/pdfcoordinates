@@ -528,7 +528,7 @@ function pdfViewer() {
             } else {
                 return `${pageCode}$pdf->SetFont('${placement.font}', '', ${placement.fontSize});\n$pdf->SetXY(${placement.x}, ${placement.y});\n$pdf->Write(0, '${placement.text}');`;
             }
-        }
+        },
 
         copyCode(placement) {
             const code = this.generateCode(placement);
