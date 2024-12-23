@@ -486,8 +486,8 @@ function pdfViewer() {
             const y = event.clientY - rect.top;
 
             // Convert screen coordinates to FPDI coordinates (multiplied by 0.3528 to convert pixels to points)
-            const pdfX = Math.round(x * 0.3528);
-            const pdfY = Math.round(y * 0.3528);
+            const pdfX = Math.round(x * 0.2778).toFixed(2);
+            const pdfY = Math.round(y * 0.2778).toFixed(2);
 
             this.textPlacements.push({
                 id: Date.now(),
