@@ -190,8 +190,6 @@ Route::get('/', function () {
                 <option value="Helvetica">Helvetica</option>
                 <option value="Times-Roman">Times Roman</option>
                 <option value="Courier">Courier</option>
-                <option value="Symbol">Symbol</option>
-                <option value="ZapfDingbats">ZapfDingbats</option>
             </select>
         </div>
 
@@ -334,6 +332,10 @@ function pdfViewer() {
         pdfLoaded: false,
         previewStyle: '',
         selectedFont: 'Helvetica',
+        fpdiWidth: 612,
+        fpdiHeight: 792,
+        fpdiToJsFontRatio: 2.67,
+
 
         getPreviewText() {
             return this.inputType === 'checkbox' ? 'X' : this.textToAdd;
@@ -464,8 +466,6 @@ function pdfViewer() {
                 'Helvetica': 'Arial, sans-serif',
                 'Times-Roman': 'Times New Roman, serif',
                 'Courier': 'Courier New, monospace',
-                'Symbol': 'Symbol',
-                'ZapfDingbats': 'ZapfDingbats'
             }[this.selectedFont] || 'Arial, sans-serif';
 
             const fontWeight = this.inputType === 'checkbox' ? 'bold' : 'normal';
@@ -481,13 +481,17 @@ function pdfViewer() {
 
             const canvas = document.getElementById('pdfCanvas');
             const rect = canvas.getBoundingClientRect();
+            console.log(rect);
 
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
+            console.log(x, y);
+            console.log(event.clientX, event.clientY);
 
-            // Convert screen coordinates to FPDI coordinates (multiplied by 0.3528 to convert pixels to points)
-            const pdfX = Math.round(x * 0.2778).toFixed(2);
-            const pdfY = Math.round(y * 0.2778).toFixed(2);
+            const pdfX = (x * this.fpdiWidth / rect.width).toFixed(2);
+            const pdfY = ((y * this.fpdiHeight / rect.height) + 7.25).toFixed(2); // Add Y offset correction
+
+            const fpdiScaledFontSize = Math.round(this.fontSize * this.fpdiToJsFontRatio);
 
             this.textPlacements.push({
                 id: Date.now(),
@@ -497,7 +501,8 @@ function pdfViewer() {
                 page: this.pageNum,
                 screenX: x,
                 screenY: y,
-                fontSize: this.fontSize,
+                fontSize: fpdiScaledFontSize, // Store the FPDI-scaled font size
+                displayFontSize: this.fontSize, // Store original size for display
                 type: this.inputType,
                 font: this.selectedFont,
             });
@@ -517,7 +522,7 @@ function pdfViewer() {
             }[placement.font] || 'Arial, sans-serif';
 
             const fontWeight = placement.type === 'checkbox' ? 'bold' : 'normal';
-            return `left: ${placement.screenX}px; top: ${placement.screenY}px; font-size: ${placement.fontSize * 1.5}px; font-family: ${fontFamily}; font-weight: ${fontWeight};`;
+            return `left: ${placement.screenX}px; top: ${placement.screenY}px; font-size: ${placement.displayFontSize * 1.5}px; font-family: ${fontFamily}; font-weight: ${fontWeight};`;
         },
 
         generateCode(placement) {
